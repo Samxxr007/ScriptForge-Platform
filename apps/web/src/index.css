@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#090a0f] text-slate-100 font-sans;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0d0f17;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2230;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2e354b;
+}
+
+/* Screenplay Formatting Canvas */
+.screenplay-canvas {
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  line-height: 1.15;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+}
+
+.screenplay-canvas .is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #4b5563;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Screenplay Element Styles */
+.screenplay-scene-heading {
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #f1f5f9;
+}
+
+.screenplay-action {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  color: #cbd5e1;
+}
+
+.screenplay-character {
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 1rem;
+  margin-bottom: 0.15rem;
+  text-align: center;
+  width: 100%;
+  color: #38bdf8;
+}
+
+.screenplay-dialogue {
+  margin-left: 20%;
+  margin-right: 20%;
+  margin-bottom: 0.5rem;
+  color: #f8fafc;
+}
+
+.screenplay-parenthetical {
+  font-style: italic;
+  margin-left: 30%;
+  margin-right: 30%;
+  margin-bottom: 0.15rem;
+  color: #94a3b8;
+}
+
+.screenplay-transition {
+  font-weight: 700;
+  text-transform: uppercase;
+  text-align: right;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  color: #fbbf24;
+}
+
+/* Comment and Suggestion Highlights */
+.comment-highlight {
+  background-color: rgba(56, 189, 248, 0.25);
+  border-bottom: 2px solid #38bdf8;
+  cursor: pointer;
+}
+
+.suggestion-insertion {
+  background-color: rgba(52, 211, 153, 0.25);
+  border-bottom: 2px solid #34d399;
+}
+
+.suggestion-deletion {
+  background-color: rgba(251, 113, 133, 0.25);
+  text-decoration: line-through;
+  color: #fb7185;
+}
+
+/* Glowing Accent Rings */
+.glow-cyan {
+  box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.3);
+}
+
+.glow-purple {
+  box-shadow: 0 0 25px -5px rgba(129, 140, 248, 0.3);
+}

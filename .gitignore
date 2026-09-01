@@ -1,0 +1,34 @@
+# Node modules
+node_modules/
+apps/*/node_modules/
+
+# Environment files (never commit API keys)
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+
+# Build output
+dist/
+build/
+apps/*/dist/
+apps/*/build/
+
+# Database files
+*.db
+*.db-journal
+dev.db
+apps/server/dev.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

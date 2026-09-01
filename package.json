@@ -1,0 +1,21 @@
+{
+  "name": "scriptforge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Collaborative Story & Screenplay Writing Platform with AI Previsualization",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm --workspace=apps/server run dev\" \"npm --workspace=apps/web run dev\"",
+    "dev:server": "npm --workspace=apps/server run dev",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build": "npm --workspace=apps/server run build && npm --workspace=apps/web run build",
+    "start": "npm --workspace=apps/server run start",
+    "seed": "npm --workspace=apps/server run seed",
+    "postinstall": "npm --workspace=apps/server run prisma:generate"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

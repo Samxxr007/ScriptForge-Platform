@@ -1,0 +1,330 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  avatar         String?
+  roleTitle      String?         // Onboarding role: "Writer", "Director", "Editor", "Producer"
+  preferredType  String?         // Onboarding medium: "Screenplay", "Novel", etc.
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  ownedProjects  Project[]       @relation("ProjectOwner")
+  memberships    ProjectMember[]
+  comments       Comment[]
+  suggestions    Suggestion[]
+  activities     Activity[]
+  notifications  Notification[]
+  aiRequests     AIRequest[]
+  versions       Version[]
+  branchVersions BranchVersion[]
+}
+
+model Project {
+  id             String          @id @default(uuid())
+  name           String
+  description    String?
+  logline        String?
+  genre          String?
+  type           String          @default("SCREENPLAY") // SCREENPLAY, STORY, NOVEL, SHORT_FILM, SERIES
+  visualStyle    String          @default("Cinematic Realism") // Neo-Noir, Sci-Fi, Horror, etc.
+  targetAudience String?
+  themes         String?
+  ownerId        String
+  owner          User            @relation("ProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  members        ProjectMember[]
+  documents      Document[]
+  characters     Character[]
+  locations      LocationProfile[]
+  activities     Activity[]
+  aiRequests     AIRequest[]
+}
+
+model ProjectMember {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  role      String   @default("WRITER") // OWNER, WRITER, EDITOR, VIEWER
+  joinedAt  DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Document {
+  id             String       @id @default(uuid())
+  projectId      String
+  title          String
+  content        String       @default("") // Rich text JSON / structured screenplay markup
+  currentVersion Int          @default(1)
+  activeBranchId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scenes         Scene[]
+  versions       Version[]
+  branches       Branch[]
+  comments       Comment[]
+  suggestions    Suggestion[]
+}
+
+model Scene {
+  id             String         @id @default(uuid())
+  documentId     String
+  order          Int            @default(0)
+  sceneNumber    Int?
+  title          String
+  intExt         String         @default("INT") // INT, EXT, INT/EXT
+  location       String         @default("LOCATION")
+  timeOfDay      String         @default("DAY") // DAY, NIGHT, DUSK, DAWN
+  content        String         @default("")
+  purpose        String?
+  emotionalTone  String?
+  cameraNotes    String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  document       Document       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  shots          Shot[]
+  cameraSetups   CameraSetup[]
+  sceneLayout    SceneLayout?
+  comments       Comment[]
+  suggestions    Suggestion[]
+}
+
+model Character {
+  id             String   @id @default(uuid())
+  projectId      String
+  name           String
+  role           String?  // Protagonist, Antagonist, Supporting, Mentor
+  description    String?
+  age            String?
+  personality    String?
+  motivation     String?
+  goal           String?
+  fear           String?
+  conflict       String?
+  arc            String?
+  relationships  String?
+  // Visual Profile
+  faceDescription String?
+  hair           String?
+  clothing       String?
+  bodyType       String?
+  colorPalette   String?
+  referenceImage String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model LocationProfile {
+  id           String   @id @default(uuid())
+  projectId    String
+  name         String
+  description  String?
+  architecture String?
+  layout       String?
+  lighting     String?
+  props        String?
+  timePeriod   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Version {
+  id            String   @id @default(uuid())
+  documentId    String
+  versionNumber Int
+  content       String
+  createdBy     String
+  changeSummary String?
+  isCheckpoint  Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model Branch {
+  id             String          @id @default(uuid())
+  documentId     String
+  name           String
+  description    String?
+  parentBranchId String?
+  createdBy      String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  document       Document        @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  versions       BranchVersion[]
+}
+
+model BranchVersion {
+  id            String   @id @default(uuid())
+  branchId      String
+  content       String
+  versionNumber Int
+  createdBy     String
+  createdAt     DateTime @default(now())
+
+  branch        Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  author        User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id            String   @id @default(uuid())
+  documentId    String
+  sceneId       String?
+  authorId      String
+  content       String
+  selectedText  String?
+  startPosition Int?
+  endPosition   Int?
+  status        String   @default("OPEN") // OPEN, RESOLVED
+  parentId      String?  // For replies
+  createdAt     DateTime @default(now())
+  resolvedAt    DateTime?
+
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  scene         Scene?   @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Suggestion {
+  id            String   @id @default(uuid())
+  documentId    String
+  sceneId       String?
+  authorId      String
+  originalText  String
+  suggestedText String
+  reason        String?
+  status        String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  createdAt     DateTime @default(now())
+
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  scene         Scene?   @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  author        User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Shot {
+  id             String           @id @default(uuid())
+  sceneId        String
+  shotNumber     Int
+  shotType       String           @default("Medium Shot") // Wide, Close-up, OTS, POV, etc.
+  lens           String           @default("50mm") // 24mm, 35mm, 50mm, 85mm, etc.
+  cameraPosition String?          // Description or "x,y,z"
+  cameraRotation String?
+  cameraHeight   String?          @default("Eye-Level")
+  movement       String           @default("Static") // Static, Push-in, Dolly, Pan, Tracking
+  duration       Int              @default(4) // in seconds
+  description    String?
+  purpose        String?
+  characters     String?          // comma separated or JSON
+  dialogueLine   String?
+  aiGenerated    Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  scene          Scene            @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  storyboard     StoryboardFrame?
+}
+
+model StoryboardFrame {
+  id               String   @id @default(uuid())
+  shotId           String   @unique
+  imageUrl         String?
+  prompt           String?
+  structuredPrompt String?  // JSON with camera, lighting, composition, mood
+  version          Int      @default(1)
+  status           String   @default("PENDING") // PENDING, GENERATED, FAILED
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  shot             Shot     @relation(fields: [shotId], references: [id], onDelete: Cascade)
+}
+
+model CameraSetup {
+  id          String   @id @default(uuid())
+  sceneId     String
+  name        String   // "Camera 01 - OTS", "Camera 02 - Master"
+  position    String   @default("{\"x\":0,\"y\":1.5,\"z\":3}")
+  rotation    String   @default("{\"x\":0,\"y\":0,\"z\":0}")
+  lens        String   @default("50mm")
+  fieldOfView Float    @default(45.0)
+  height      Float    @default(1.6)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  scene       Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+}
+
+model SceneLayout {
+  id                 String   @id @default(uuid())
+  sceneId            String   @unique
+  environment        String   @default("{\"type\":\"interior_room\",\"width\":12,\"length\":16,\"height\":3.5}")
+  objects            String   @default("[]") // JSON array of furniture/props
+  characterPositions String   @default("[]") // JSON array of characters in scene
+  lighting           String   @default("{\"keyLight\":{\"x\":-3,\"y\":2.5,\"z\":2,\"intensity\":1,\"color\":\"#fff8e7\"}}")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  scene              Scene    @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+}
+
+model Activity {
+  id        String   @id @default(uuid())
+  projectId String
+  userId    String
+  type      String   // VERSION_CREATED, COMMENT_ADDED, SUGGESTION_ACCEPTED, BRANCH_CREATED, etc.
+  metadata  String?  // JSON string
+  createdAt DateTime @default(now())
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  link      String?
+  read      Boolean  @default(false)
+  type      String   @default("INFO") // INFO, MENTION, SUGGESTION, INVITATION
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AIRequest {
+  id        String   @id @default(uuid())
+  projectId String?
+  userId    String
+  action    String   // CONTINUE, REWRITE, DIALOGUE, BRAINSTORM, SHOT_LIST, PREVIS, CONTINUITY
+  prompt    String
+  response  String
+  model     String
+  createdAt DateTime @default(now())
+
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
