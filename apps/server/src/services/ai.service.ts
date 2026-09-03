@@ -13,7 +13,7 @@ export class AIService {
 
   private static async complete(systemPrompt: string, userPrompt: string, jsonMode = false): Promise<string> {
     const client = this.getClient();
-    const model = process.env.GROQ_MODEL || config.groqModel || 'llama-3.3-70b-versatile';
+    const model = process.env.GROQ_MODEL || config.groqModel || 'openai/gpt-oss-120b';
 
     if (client) {
       try {
